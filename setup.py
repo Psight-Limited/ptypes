@@ -7,11 +7,10 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
-VERSION = "0.0.2"
+VERSION = "0.0.3"
 DESCRIPTION = "Personality Types"
 LONG_DESCRIPTION = "Standard python package for personality types"
 
-# Setting up
 setup(
     name="ptypes",
     version=VERSION,
@@ -21,7 +20,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=LONG_DESCRIPTION,
     license_files="LICENSE",
-    ext_modules=find_packages(),
+    packages=find_packages(),
     install_requires=[],
     url="https://github.com/Psight-Limited/ptypes",
     keywords=["python"],
