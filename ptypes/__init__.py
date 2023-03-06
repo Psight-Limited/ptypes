@@ -1,1 +1,1 @@
-from ptypes import *
+from .main import *
