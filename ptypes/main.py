@@ -324,9 +324,11 @@ def type_conversion(type_: str, conv) -> str:
 
 
 def main():
-    ptype = Type(Types.ENTP).superego()
-    print(ptype.attributes)
-    print(ptype.concrete)
+    type_ = Type(Types.ESFP)
+    type_
+
+    type_ = type_.superego().superego()
+    print(type_.attributes)
 
 
 if __name__ == "__main__":
