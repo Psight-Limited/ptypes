@@ -1,5 +1,6 @@
 from pprint import pprint as print
 from enum import Enum
+from copy import deepcopy
 
 
 class Types(Enum):
@@ -95,7 +96,6 @@ attributes_dictionary = {
     ],
 }
 
-
 _types_dict = {
     "structure": ["direct", "initiating", "outcome"],
     "starter": ["informative", "initiating", "progression"],
@@ -109,22 +109,22 @@ _types_dict = {
     "templar": ["firewind", "swordmace"],
     "wayfarer": ["firewind", "spearbow"],
     "philosopher": ["earthwater", "spearbow"],
-    "ESTJ": ["structure", "guardian", "philosopher", "mind", "authority"],
-    "ESTP": ["structure", "artistan", "templar", "soul", "intimacy"],
-    "ENTJ": ["structure", "intellectual", "wayfarer", "body", "purpose"],
-    "ENFJ": ["structure", "idealist", "templar", "mind", "validation"],
-    "ESFJ": ["starter", "guardian", "crusader", "body", "discovery"],
-    "ESFP": ["starter", "artistan", "wayfarer", "heart", "reverance"],
-    "ENTP": ["starter", "intellectual", "crusader", "heart", "satisfaction"],
-    "ENFP": ["starter", "idealist", "philosopher", "soul", "justification"],
-    "ISTJ": ["finisher", "guardian", "philosopher", "soul", "justification"],
-    "ISTP": ["finisher", "artistan", "templar", "mind", "validation"],
-    "INTJ": ["finisher", "intellectual", "wayfarer", "heart", "reverance"],
-    "INFJ": ["finisher", "idealist", "templar", "soul", "intimacy"],
-    "ISFJ": ["background", "guardian", "crusader", "heart", "satisfaction"],
-    "ISFP": ["background", "artistan", "wayfarer", "body", "purpose"],
-    "INTP": ["background", "intellectual", "crusader", "body", "discovery"],
-    "INFP": ["background", "idealist", "philosopher", "mind", "authority"],
+    "ESTJ": ["ESTJ", "structure", "guardian", "philosopher", "mind", "authority"],
+    "ESTP": ["ESTP", "structure", "artistan", "templar", "soul", "intimacy"],
+    "ENTJ": ["ENTJ", "structure", "intellectual", "wayfarer", "body", "purpose"],
+    "ENFJ": ["ENFJ", "structure", "idealist", "templar", "mind", "validation"],
+    "ESFJ": ["ESFJ", "starter", "guardian", "crusader", "body", "discovery"],
+    "ESFP": ["ESFP", "starter", "artistan", "wayfarer", "heart", "reverance"],
+    "ENTP": ["ENTP", "starter", "intellectual", "crusader", "heart", "satisfaction"],
+    "ENFP": ["ENFP", "starter", "idealist", "philosopher", "soul", "justification"],
+    "ISTJ": ["ISTJ", "finisher", "guardian", "philosopher", "soul", "justification"],
+    "ISTP": ["ISTP", "finisher", "artistan", "templar", "mind", "validation"],
+    "INTJ": ["INTJ", "finisher", "intellectual", "wayfarer", "heart", "reverance"],
+    "INFJ": ["INFJ", "finisher", "idealist", "templar", "soul", "intimacy"],
+    "ISFJ": ["ISFJ", "background", "guardian", "crusader", "heart", "satisfaction"],
+    "ISFP": ["ISFP", "background", "artistan", "wayfarer", "body", "purpose"],
+    "INTP": ["INTP", "background", "intellectual", "crusader", "body", "discovery"],
+    "INFP": ["INFP", "background", "idealist", "philosopher", "mind", "authority"],
 }
 
 
@@ -136,9 +136,9 @@ class Type:
         if type_ not in [x.name for x in list(Types)]:
             raise
 
-        has_attributes = _types_dict[type_]
+        has_attributes = deepcopy(_types_dict)[type_]
         for v in [_ for _ in has_attributes]:
-            has_attributes += _types_dict.get(v, [])
+            has_attributes += deepcopy(_types_dict).get(v, [])
 
         for catagory, groups in attributes_dictionary.items():
             for attributes in groups[::-1]:
@@ -153,7 +153,7 @@ class Type:
                     for i in attributes:
                         exec(f"self.{i} = False")
 
-        self.attributes = has_attributes
+        self.attributes = list(set(has_attributes))
         self.type = type_
 
         if True:
@@ -327,7 +327,7 @@ def main():
     type_ = Type(Types.ESFP)
     type_
 
-    type_ = type_.superego().superego()
+    type_ = type_.superego().subconsious()
     print(type_.attributes)
 
 
