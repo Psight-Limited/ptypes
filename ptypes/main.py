@@ -22,7 +22,7 @@ class Types(Enum):
     INFP = 15
 
 
-class Quadra(Enum):
+class Quadras(Enum):
     crusader = 0
     templar = 1
     wayfarer = 2
@@ -162,6 +162,7 @@ class Type:
 
         self.attributes = list(set(has_attributes))
         self.type = type_
+        self.quadra: Quadras = Quadras[self.quadra]
 
         if True:
             self.expression = self.expression
