@@ -4,22 +4,29 @@ from copy import deepcopy
 
 
 class Types(Enum):
-    ESTJ = 1
-    ESTP = 2
-    ENTJ = 3
-    ENFJ = 4
-    ESFJ = 5
-    ESFP = 6
-    ENTP = 7
-    ENFP = 8
-    ISTJ = 9
-    ISTP = 10
-    INTJ = 11
-    INFJ = 12
-    ISFJ = 13
-    ISFP = 14
-    INTP = 15
-    INFP = 16
+    ESTJ = 0
+    ESTP = 1
+    ENTJ = 2
+    ENFJ = 3
+    ESFJ = 4
+    ESFP = 5
+    ENTP = 6
+    ENFP = 7
+    ISTJ = 8
+    ISTP = 9
+    INTJ = 10
+    INFJ = 11
+    ISFJ = 12
+    ISFP = 13
+    INTP = 14
+    INFP = 15
+
+
+class Quadra(Enum):
+    crusader = 0
+    templar = 1
+    wayfarer = 2
+    philosopher = 3
 
 
 attributes_dictionary = {
