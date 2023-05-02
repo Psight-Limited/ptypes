@@ -279,10 +279,10 @@ class Type:
             self.attributes = self.attributes
             self.type = self.type
 
-    def subconsious(self):
+    def subconscious(self):
         return Type(type_conversion(self.type, 0b1111))
 
-    def unconsious(self):
+    def unconscious(self):
         return Type(type_conversion(self.type, 0b1001))
 
     def superego(self):
@@ -335,7 +335,7 @@ def main():
     type_ = Type(Types.ESFP)
     type_
 
-    type_ = type_.superego().subconsious()
+    type_ = type_.superego().subconscious()
     print(type_.attributes)
 
 
