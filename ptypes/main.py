@@ -6,7 +6,7 @@ class InvalidTypeException(Exception):
     pass
 
 
-Types = [
+_types = [
     "ESTJ", "ESTP", "ENTJ", "ENFJ", "ESFJ", "ESFP", "ENTP", "ENFP",
     "ISTJ", "ISTP", "INTJ", "INFJ", "ISFJ", "ISFP", "INTP", "INFP",
 ]
@@ -21,16 +21,16 @@ class Type:
     Type("ESTP").E
     >>> True
     ```"""
-    _instances = {}
+    types = {}
 
     def __new__(cls, type):
         if isinstance(type, str):
             type = type.upper()
-        if type not in Types:
+        if type not in _types:
             raise InvalidTypeException(f"Type {type} is not valid.")
-        if type not in cls._instances:
-            cls._instances[type] = super().__new__(cls)
-        return cls._instances.get(type)
+        if type not in cls.types:
+            cls.types[type] = super().__new__(cls)
+        return cls.types.get(type)
 
     def __init__(self, type):
         if hasattr(self, "type"):
@@ -100,12 +100,7 @@ class Type:
         self.attr_7 = self.calc_formula("ST|IF")
         self.attr_8 = self.calc_formula("EF|TN")
         self.attr_9 = self.calc_formula("STJ|EFJ|NTP|IFP")
-        self.attr_10 = self.calc_formula("STP|NTJ|EFP|IFJ")
-        self.attr_11 = self.calc_formula("ETJ|SFJ|ITP|NFP")
-        self.attr_12 = self.calc_formula("ETP|SFP|ITJ|NFJ")
-        self.attr_13 = self.calc_formula("EFJ|STP|NTJ|IFP")
-        self.attr_14 = self.calc_formula("STJ|EFP|NTP|IFJ")
-        self.attr_15 = self.calc_formula("ETJ|SFP|ITP|NFJ")
+        self.attr_10 = self.calc_formula("STP|NTJ|EFP|IFJ") self.attr_11 = self.calc_formula("ETJ|SFJ|ITP|NFP") self.attr_12 = self.calc_formula("ETP|SFP|ITJ|NFJ") self.attr_13 = self.calc_formula("EFJ|STP|NTJ|IFP") self.attr_14 = self.calc_formula("STJ|EFP|NTP|IFJ") self.attr_15 = self.calc_formula("ETJ|SFP|ITP|NFJ")
         self.attr_16 = self.calc_formula("ETP|SFJ|ITJ|NFP")
         self.x = self.calc_formula("ST|NP")
         self.y = self.calc_formula("SF|NJ")
@@ -197,7 +192,7 @@ def _check_duplicates():
         "Ti", "Te",
     ]
     _attributes = {}
-    for type_value, type in enumerate(Types):
+    for type_value, type in enumerate(_types):
         type_value = 2**type_value
         for attr in Type(type).get_attributes():
             if attr in skip_attributes:
@@ -216,9 +211,9 @@ def _check_duplicates():
         raise Exception("Duplicates found in attributes.")
 
 
-for type in Types:
+for type in _types:
     Type(type)
-for type in Types:
+for type in _types:
     Type(type).update_relationships()
 
 ESTJ = Type("ESTJ")
