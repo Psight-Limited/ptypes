@@ -1,343 +1,242 @@
-from pprint import pprint as print
-from enum import Enum
-from copy import deepcopy
+import re
+import ptypes.formulas as formulas
 
 
-class Types(Enum):
-    ESTJ = 0
-    ESTP = 1
-    ENTJ = 2
-    ENFJ = 3
-    ESFJ = 4
-    ESFP = 5
-    ENTP = 6
-    ENFP = 7
-    ISTJ = 8
-    ISTP = 9
-    INTJ = 10
-    INFJ = 11
-    ISFJ = 12
-    ISFP = 13
-    INTP = 14
-    INFP = 15
+class InvalidTypeException(Exception):
+    pass
 
 
-class Quadras(Enum):
-    crusader = 0
-    templar = 1
-    wayfarer = 2
-    philosopher = 3
-
-
-attributes_dictionary = {
-    "expression": [
-        ["structure", "in_charge", "DIC"],
-        ["starter", "get_things_going"],
-        ["finisher", "chart_the_course"],
-        ["background", "behind_the_scenes"],
-        #
-        ["direct"],
-        ["informative"],
-        ["initiating", "extrovert", "E"],
-        ["responding", "introvert", "I"],
-        ["outcome", "control"],
-        ["progression", "movement"],
-    ],
-    "worldview": [
-        ["guardian", "SJ"],
-        ["artistan", "SP"],
-        ["intellectual", "NT"],
-        ["idealist", "NJ"],
-        #
-        ["concrete", "sensor", "S"],
-        ["affiliative"],
-        ["systematic"],
-        ["abstract", "intuitive", "N"],
-        ["pragmatic"],
-        ["interest"],
-    ],
-    "quadra": [
-        ["crusader", "alpha"],
-        ["templar", "beta"],
-        ["wayfarer", "gamma"],
-        ["philosopher", "delta"],
-        #
-        ["earthwater", "earth", "water", "waterearth", "si", "ne", "nesi", "sine"],
-        ["swordmace", "sword", "mace", "macesword", "ti", "fe", "tife", "feti"],
-        ["firewind", "fire", "wind", "windfire", "se", "ni", "seni", "nise"],
-        ["spearbow", "spear", "bow", "bowspear", "te", "fi", "tefi", "fite"],
-    ],
-    "temple": [
-        ["soul"],
-        ["heart"],
-        ["body"],
-        ["mind"],
-    ],
-    "origin": [
-        ["authority"],
-        ["discovery"],
-        ["intimacy"],
-        ["justification"],
-        ["purpose"],
-        ["reverance"],
-        ["satisfaction"],
-        ["validation"],
-    ],
-    "type": [
-        ["ESTJ"],
-        ["ESTP"],
-        ["ENTJ"],
-        ["ENFJ"],
-        ["ESFJ"],
-        ["ESFP"],
-        ["ENTP"],
-        ["ENFP"],
-        ["ISTJ"],
-        ["ISTP"],
-        ["INTJ"],
-        ["INFJ"],
-        ["ISFJ"],
-        ["ISFP"],
-        ["INTP"],
-        ["INFP"],
-    ],
-}
-
-_types_dict = {
-    "structure": ["direct", "initiating", "outcome"],
-    "starter": ["informative", "initiating", "progression"],
-    "finisher": ["direct", "responding", "progression"],
-    "background": ["informative", "responding", "outcome"],
-    "guardian": ["concrete", "affiliative", "systematic"],
-    "artistan": ["concrete", "pragmatic", "interest"],
-    "intellectual": ["abstract", "pragmatic", "systematic"],
-    "idealist": ["abstract", "affiliative", "interest"],
-    "crusader": ["earthwater", "swordmace"],
-    "templar": ["firewind", "swordmace"],
-    "wayfarer": ["firewind", "spearbow"],
-    "philosopher": ["earthwater", "spearbow"],
-    "ESTJ": ["ESTJ", "structure", "guardian", "philosopher", "mind", "authority"],
-    "ESTP": ["ESTP", "structure", "artistan", "templar", "soul", "intimacy"],
-    "ENTJ": ["ENTJ", "structure", "intellectual", "wayfarer", "body", "purpose"],
-    "ENFJ": ["ENFJ", "structure", "idealist", "templar", "mind", "validation"],
-    "ESFJ": ["ESFJ", "starter", "guardian", "crusader", "body", "discovery"],
-    "ESFP": ["ESFP", "starter", "artistan", "wayfarer", "heart", "reverance"],
-    "ENTP": ["ENTP", "starter", "intellectual", "crusader", "heart", "satisfaction"],
-    "ENFP": ["ENFP", "starter", "idealist", "philosopher", "soul", "justification"],
-    "ISTJ": ["ISTJ", "finisher", "guardian", "philosopher", "soul", "justification"],
-    "ISTP": ["ISTP", "finisher", "artistan", "templar", "mind", "validation"],
-    "INTJ": ["INTJ", "finisher", "intellectual", "wayfarer", "heart", "reverance"],
-    "INFJ": ["INFJ", "finisher", "idealist", "templar", "soul", "intimacy"],
-    "ISFJ": ["ISFJ", "background", "guardian", "crusader", "heart", "satisfaction"],
-    "ISFP": ["ISFP", "background", "artistan", "wayfarer", "body", "purpose"],
-    "INTP": ["INTP", "background", "intellectual", "crusader", "body", "discovery"],
-    "INFP": ["INFP", "background", "idealist", "philosopher", "mind", "authority"],
-}
+Types = [
+    "ESTJ", "ESTP", "ENTJ", "ENFJ", "ESFJ", "ESFP", "ENTP", "ENFP",
+    "ISTJ", "ISTP", "INTJ", "INFJ", "ISFJ", "ISFP", "INTP", "INFP",
+]
 
 
 class Type:
-    def __init__(self, type_: Types):
-        if type_ in list(Types):
-            type_ = type_.name
-        type_ = type_.upper()
-        if type_ not in [x.name for x in list(Types)]:
-            raise
+    """Represents a personality type and all its attributes.
 
-        has_attributes = deepcopy(_types_dict)[type_]
-        for v in [_ for _ in has_attributes]:
-            has_attributes += deepcopy(_types_dict).get(v, [])
+    ```
+    Type("ESTP")
+    >>> ESTP
+    Type("ESTP").E
+    >>> True
+    ```"""
+    _instances = {}
 
-        for catagory, groups in attributes_dictionary.items():
-            for attributes in groups[::-1]:
-                x = set(has_attributes) & set(attributes)
-                if len(x):
-                    exec(f"self.{catagory} = {repr(attributes[0])}")
-                    for i in attributes:
-                        exec(f"self.{i} = True")
-                        if i not in has_attributes:
-                            has_attributes += [i]
-                else:
-                    for i in attributes:
-                        exec(f"self.{i} = False")
+    def __new__(cls, type):
+        if isinstance(type, str):
+            type = type.upper()
+        if type not in Types:
+            raise InvalidTypeException(f"Type {type} is not valid.")
+        if type not in cls._instances:
+            cls._instances[type] = super().__new__(cls)
+        return cls._instances.get(type)
 
-        self.attributes = list(set(has_attributes))
-        self.type = type_
-        self.quadra: Quadras = Quadras[self.quadra]
+    def __init__(self, type):
+        if hasattr(self, "type"):
+            return
 
-        if True:
-            self.expression = self.expression
-            self.progression = self.progression
-            self.movement = self.movement
-            self.outcome = self.outcome
-            self.control = self.control
-            self.responding = self.responding
-            self.introvert = self.introvert
-            self.I = self.I
-            self.initiating = self.initiating
-            self.extrovert = self.extrovert
-            self.E = self.E
-            self.informative = self.informative
-            self.direct = self.direct
-            self.background = self.background
-            self.behind_the_scenes = self.behind_the_scenes
-            self.finisher = self.finisher
-            self.chart_the_course = self.chart_the_course
-            self.starter = self.starter
-            self.get_things_going = self.get_things_going
-            self.structure = self.structure
-            self.in_charge = self.in_charge
-            self.DIC = self.DIC
-            self.interest = self.interest
-            self.worldview = self.worldview
-            self.pragmatic = self.pragmatic
-            self.abstract = self.abstract
-            self.intuitive = self.intuitive
-            self.systematic = self.systematic
-            self.affiliative = self.affiliative
-            self.concrete = self.concrete
-            self.sensor = self.sensor
-            self.S = self.S
-            self.idealist = self.idealist
-            self.NJ = self.NJ
-            self.intellectual = self.intellectual
-            self.NT = self.NT
-            self.artistan = self.artistan
-            self.SP = self.SP
-            self.guardian = self.guardian
-            self.SJ = self.SJ
-            self.spearbow = self.spearbow
-            self.spear = self.spear
-            self.bow = self.bow
-            self.bowspear = self.bowspear
-            self.te = self.te
-            self.fi = self.fi
-            self.tefi = self.tefi
-            self.fite = self.fite
-            self.firewind = self.firewind
-            self.fire = self.fire
-            self.wind = self.wind
-            self.windfire = self.windfire
-            self.se = self.se
-            self.ni = self.ni
-            self.seni = self.seni
-            self.nise = self.nise
-            self.quadra = self.quadra
-            self.swordmace = self.swordmace
-            self.sword = self.sword
-            self.mace = self.mace
-            self.macesword = self.macesword
-            self.ti = self.ti
-            self.fe = self.fe
-            self.tife = self.tife
-            self.feti = self.feti
-            self.earthwater = self.earthwater
-            self.earth = self.earth
-            self.water = self.water
-            self.waterearth = self.waterearth
-            self.si = self.si
-            self.ne = self.ne
-            self.nesi = self.nesi
-            self.sine = self.sine
-            self.philosopher = self.philosopher
-            self.delta = self.delta
-            self.wayfarer = self.wayfarer
-            self.gamma = self.gamma
-            self.templar = self.templar
-            self.beta = self.beta
-            self.crusader = self.crusader
-            self.alpha = self.alpha
-            self.mind = self.mind
-            self.body = self.body
-            self.temple = self.temple
-            self.heart = self.heart
-            self.soul = self.soul
-            self.validation = self.validation
-            self.origin = self.origin
-            self.satisfaction = self.satisfaction
-            self.reverance = self.reverance
-            self.purpose = self.purpose
-            self.justification = self.justification
-            self.intimacy = self.intimacy
-            self.discovery = self.discovery
-            self.authority = self.authority
-            self.INFP = self.INFP
-            self.INTP = self.INTP
-            self.ISFP = self.ISFP
-            self.ISFJ = self.ISFJ
-            self.INFJ = self.INFJ
-            self.INTJ = self.INTJ
-            self.ISTP = self.ISTP
-            self.ISTJ = self.ISTJ
-            self.ENFP = self.ENFP
-            self.ENTP = self.ENTP
-            self.ESFP = self.ESFP
-            self.ESFJ = self.ESFJ
-            self.ENFJ = self.ENFJ
-            self.ENTJ = self.ENTJ
-            self.ESTP = self.ESTP
-            self.ESTJ = self.ESTJ
-            self.attributes = self.attributes
-            self.type = self.type
+        self._type = type
+        self.E = "E" == type[0]
+        self.S = "S" == type[1]
+        self.T = "T" == type[2]
+        self.J = "J" == type[3]
+        self.I = not self.E
+        self.N = not self.S
+        self.F = not self.T
+        self.P = not self.J
+        self.Si = self.calc_formula("NP|SJ")
+        self.Ne = self.calc_formula("Si")
+        self.Se = self.calc_formula("!Si")
+        self.Ni = self.calc_formula("Se")
+        self.Ti = self.calc_formula("FJ|TP")
+        self.Fe = self.calc_formula("Ti")
+        self.Te = self.calc_formula("!Ti")
+        self.Fi = self.calc_formula("Te")
 
-    def subconscious(self):
-        return Type(type_conversion(self.type, 0b1111))
+        self.Crusader = self.calc_formula("SiTi")
+        self.Templar = self.calc_formula("SeTi")
+        self.Wayfarer = self.calc_formula("SeTe")
+        self.Philosopher = self.calc_formula("SiTe")
+        self.Quadra = \
+            "Crusader" if self.Crusader else \
+            "Templar" if self.Templar else \
+            "Wayfarer" if self.Wayfarer else \
+            "Philosopher"
 
-    def unconscious(self):
-        return Type(type_conversion(self.type, 0b1001))
+        self.Direct = self.calc_formula("ST|NJ")
+        self.Informative = self.calc_formula("SF|NP")
+        self.Initiating = self.calc_formula("E")
+        self.Responding = self.calc_formula("I")
+        self.Progression = self.calc_formula("ESF|IST|ENP|INJ")
+        self.Outcome = self.calc_formula("EST|ISF|ENJ|INP")
+        self.Concrete = self.calc_formula("S")
+        self.Abstract = self.calc_formula("N")
+        self.Systematic = self.calc_formula("SJ|NT")
+        self.Interest = self.calc_formula("SP|NF")
+        self.Pragmatic = self.calc_formula("SP|NT")
+        self.Affiliative = self.calc_formula("SJ|NF")
 
-    def superego(self):
-        return Type(type_conversion(self.type, 0b0110))
+        self.Abstract_temple = self.calc_formula("EP|IJ")
+        self.Concrete_temple = self.calc_formula("EJ|IP")
+        self.Pragmatic_temple = self.calc_formula("SF|NT")
+        self.Affiliative_temple = self.calc_formula("ST|NF")
+        self.Soul = self.calc_formula("Abstract_templeAffiliative_temple")
+        self.Heart = self.calc_formula("Abstract_templePragmatic_temple")
+        self.Body = self.calc_formula("Concrete_templePragmatic_temple")
+        self.Mind = self.calc_formula("Concrete_templeAffiliative_temple")
+        self.Temple = \
+            "Soul" if self.Soul else \
+            "Heart" if self.Heart else \
+            "Body" if self.Body else \
+            "Mind"
 
-    def __call__(self) -> str:
-        return self.type
+        self.attr_1 = self.calc_formula("ET|SF")
+        self.attr_2 = self.calc_formula("IT|NF")
+        self.attr_3 = self.calc_formula("ET|NF")
+        self.attr_4 = self.calc_formula("SF|TI")
+        self.attr_5 = self.calc_formula("ST|EF")
+        self.attr_6 = self.calc_formula("TN|IF")
+        self.attr_7 = self.calc_formula("ST|IF")
+        self.attr_8 = self.calc_formula("EF|TN")
+        self.attr_9 = self.calc_formula("STJ|EFJ|NTP|IFP")
+        self.attr_10 = self.calc_formula("STP|NTJ|EFP|IFJ")
+        self.attr_11 = self.calc_formula("ETJ|SFJ|ITP|NFP")
+        self.attr_12 = self.calc_formula("ETP|SFP|ITJ|NFJ")
+        self.attr_13 = self.calc_formula("EFJ|STP|NTJ|IFP")
+        self.attr_14 = self.calc_formula("STJ|EFP|NTP|IFJ")
+        self.attr_15 = self.calc_formula("ETJ|SFP|ITP|NFJ")
+        self.attr_16 = self.calc_formula("ETP|SFJ|ITJ|NFP")
+        self.x = self.calc_formula("ST|NP")
+        self.y = self.calc_formula("SF|NJ")
+        self.w = self.calc_formula("ESJ|ENT|ISP|INF")
+        self.z = self.calc_formula("ESP|ENF|ISJ|INT")
+        self.p = self.calc_formula("ESF|ENJ|IST|INP")
+        self.q = self.calc_formula("EST|ENP|ISF|INJ")
 
-    def __str__(self) -> str:
-        return self.type
+    def update_relationships(self):
+        self.unconscious = self.convert(0b1001)
+        self.silver = self.convert(0b0001)
+        self.natural = self.convert(0b1110)
+        self.superego = self.convert(0b0110)
 
-    def __repr__(self) -> str:
-        return self.type
+        self.pedagogue = self.convert(0b1011)
+        #
+        #
+        #
 
-    def to_dict(self) -> dict:
-        return {x: y for x, y in vars(self).items() if x[0] != "_"}
+        #
+        #
+        #
+        #
 
+        #
+        #
+        self.subconscious = self.convert(0b1111)
+        self.ego = self
 
-def type_conversion(type_: str, conv) -> str:
-    if type(conv) == int:
-        if conv > 15 or conv < 0:
-            raise
-        conv = f"0000{bin(conv)[2:]}"[-4:]
-    if type(conv) != str:
-        raise
-    if len(conv) != 4:
-        raise
+    def calc_formula(self, formula):
+        formula = formulas.format(formula)
+        for var in formulas.VAR_REGEX.findall(formula):
+            if getattr(self, var) is None:
+                raise InvalidTypeException(f"Attribute {var} is not valid.")
+            formula = re.sub(rf'\b{var}\b', str(getattr(self, var)), formula)
+        return eval(formula)
 
-    base = "ESTJ"
-    base_inv = "INFP"
-    type_binary = ""
-    for i in range(4):
-        type_binary += str(int(base[i] == type_[i]))
-    out_binary = ""
-    for i in range(4):
-        if int(conv[i]):
-            out_binary += str(1 - int(type_binary[i]))
-        else:
-            out_binary += str(int(type_binary[i]))
-    out = ""
-    for i in range(4):
-        if int(out_binary[i]):
-            out += base[i]
-        else:
-            out += base_inv[i]
-    return out
+    def get_attributes(self) -> list:
+        return [k for k, v in self.__dict__.items()
+                if v is True and not k.startswith("_")]
+
+    def convert(self, conversion: int) -> "Type":
+        """Converts the type to another type based on the conversion number.
+        The conversion number is 4 bits
+
+        ```
+        ESTP.convert(0b1111)
+        >>> INFJ
+        ESTP.convert('0001')
+        >>> ESTJ
+        ```"""
+        if isinstance(conversion, str):
+            conversion = int(conversion, 2)
+        if not isinstance(conversion, int) \
+                or conversion < 0 or conversion > 15:
+            raise ValueError("Invalid input. Must be an integer between 0-15.")
+        conversion_bin = bin(conversion)[2:].zfill(4)
+        E = self.E ^ bool(int(conversion_bin[-4]))
+        S = self.S ^ bool(int(conversion_bin[-3]))
+        T = self.T ^ bool(int(conversion_bin[-2]))
+        J = self.J ^ bool(int(conversion_bin[-1]))
+        return Type(
+            ("E" if E else "I") +
+            ("S" if S else "N") +
+            ("T" if T else "F") +
+            ("J" if J else "P")
+        )
+
+    def __str__(self):
+        return self._type
+
+    def __repr__(self):
+        return f"Type('{self._type}')"
 
 
-def main():
-    type_ = Type(Types.ESFP)
-    type_
+def _check_duplicates():
+    """This function is to make sure we don't
+    create duplicate attributes in the future
 
-    type_ = type_.superego().subconscious()
-    print(type_.attributes)
+    It will raise an exception if we do"""
+    skip_attributes = [
+        # These attributes have duplicates by design
+        # Ensure that we only skip 1 of the N duplicates
+        # So that we can still detect duplicates
+        # If they appear in the future
+        "Abstract", "Concrete",
+        "Initiating", "Responding",
+        "Ni", "Ne",
+        "Ti", "Te",
+    ]
+    _attributes = {}
+    for type_value, type in enumerate(Types):
+        type_value = 2**type_value
+        for attr in Type(type).get_attributes():
+            if attr in skip_attributes:
+                continue
+            if attr not in _attributes:
+                _attributes[attr] = type_value
+            else:
+                _attributes[attr] += type_value
+    duplicates = {k: v for k, v in _attributes.items()
+                  if len([x for x in _attributes.values() if x == v]) > 1}
+    if len(duplicates):
+        groups = {}
+        for k, v in duplicates.items():
+            groups.setdefault(format(v, '016b'), []).append(k)
+        print(groups)
+        raise Exception("Duplicates found in attributes.")
 
 
-if __name__ == "__main__":
-    main()
+for type in Types:
+    Type(type)
+for type in Types:
+    Type(type).update_relationships()
+
+ESTJ = Type("ESTJ")
+ESTP = Type("ESTP")
+ENTJ = Type("ENTJ")
+ENFJ = Type("ENFJ")
+ESFJ = Type("ESFJ")
+ESFP = Type("ESFP")
+ENTP = Type("ENTP")
+ENFP = Type("ENFP")
+ISTJ = Type("ISTJ")
+ISTP = Type("ISTP")
+INTJ = Type("INTJ")
+INFJ = Type("INFJ")
+ISFJ = Type("ISFJ")
+ISFP = Type("ISFP")
+INTP = Type("INTP")
+INFP = Type("INFP")
+
+
+_check_duplicates()
