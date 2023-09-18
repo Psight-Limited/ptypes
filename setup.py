@@ -7,7 +7,11 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
-VERSION = "1.1.1"
+# Read requirements.txt
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
+VERSION = "1.2.0"
 DESCRIPTION = "Personality Types"
 LONG_DESCRIPTION = "Standard python package for personality types"
 
@@ -21,7 +25,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     license_files="LICENSE",
     packages=find_packages(),
-    install_requires=[],
+    install_requires=requirements,
     url="https://github.com/Psight-Limited/ptypes",
     keywords=["python"],
     classifiers=[
