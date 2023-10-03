@@ -1,5 +1,6 @@
 import re
 import ptypes.formulas as formulas
+from pprint import pprint
 
 
 class InvalidTypeException(Exception):
@@ -64,18 +65,58 @@ class Type:
             "Wayfarer" if self.Wayfarer else \
             "Philosopher"
 
-        self.Direct = self.calc_formula("ST|NJ")
-        self.Informative = self.calc_formula("SF|NP")
+        self.Structure = self.calc_formula("E&(ST|NJ)")
+        self.Starter = self.calc_formula("E&(SF|NP)")
+        self.Finisher = self.calc_formula("I&(ST|NJ)")
+        self.Background = self.calc_formula("I&(SF|NP)")
+        self.Interaction_style = \
+            "Structure" if self.Structure else \
+            "Starter" if self.Starter else \
+            "Finisher" if self.Finisher else \
+            "Background"
         self.Initiating = self.calc_formula("E")
         self.Responding = self.calc_formula("I")
+        self.Direct = self.calc_formula("ST|NJ")
+        self.Informative = self.calc_formula("SF|NP")
         self.Progression = self.calc_formula("ESF|IST|ENP|INJ")
         self.Outcome = self.calc_formula("EST|ISF|ENJ|INP")
+
+        self.Guardian = self.calc_formula("SJ")
+        self.Artisan = self.calc_formula("SP")
+        self.Intellectual = self.calc_formula("NT")
+        self.Idealist = self.calc_formula("NF")
+        self.Temperament = \
+            "Guardian" if self.Guardian else \
+            "Artisan" if self.Artisan else \
+            "Intellectual" if self.Intellectual else \
+            "Idealist"
         self.Concrete = self.calc_formula("S")
         self.Abstract = self.calc_formula("N")
         self.Systematic = self.calc_formula("SJ|NT")
         self.Interest = self.calc_formula("SP|NF")
         self.Pragmatic = self.calc_formula("SP|NT")
         self.Affiliative = self.calc_formula("SJ|NF")
+
+        self.ES = self.calc_formula("ES")
+        self.EN = self.calc_formula("EN")
+        self.IS = self.calc_formula("IS")
+        self.IN = self.calc_formula("IN")
+        self.ET = self.calc_formula("ET")
+        self.EF = self.calc_formula("EF")
+        self.IT = self.calc_formula("IT")
+        self.IF = self.calc_formula("IF")
+        self.EJ = self.calc_formula("EJ")
+        self.EP = self.calc_formula("EP")
+        self.IJ = self.calc_formula("IJ")
+        self.IP = self.calc_formula("IP")
+        self.ST = self.calc_formula("ST")
+        self.SF = self.calc_formula("SF")
+        self.NJ = self.calc_formula("NJ")
+        self.NP = self.calc_formula("NP")
+        self.TJ = self.calc_formula("TJ")  # Direct
+        self.TP = self.calc_formula("TP")  # Prag
+        self.FJ = self.calc_formula("FJ")  # Affil
+        self.FP = self.calc_formula("FP")  # Informative
 
         self.Abstract_temple = self.calc_formula("EP|IJ")
         self.Concrete_temple = self.calc_formula("EJ|IP")
@@ -85,8 +126,7 @@ class Type:
         self.Heart = self.calc_formula("Abstract_templePragmatic_temple")
         self.Body = self.calc_formula("Concrete_templePragmatic_temple")
         self.Mind = self.calc_formula("Concrete_templeAffiliative_temple")
-        self.Temple = \
-            "Soul" if self.Soul else \
+        self.Temple = "Soul" if self.Soul else \
             "Heart" if self.Heart else \
             "Body" if self.Body else \
             "Mind"
@@ -94,11 +134,11 @@ class Type:
         self.attr_1 = self.calc_formula("ET|SF")
         self.attr_2 = self.calc_formula("IT|NF")
         self.attr_3 = self.calc_formula("ET|NF")
-        self.attr_4 = self.calc_formula("SF|TI")
+        self.attr_4 = self.calc_formula("SF|IT")
         self.attr_5 = self.calc_formula("ST|EF")
-        self.attr_6 = self.calc_formula("TN|IF")
+        self.attr_6 = self.calc_formula("NT|IF")
         self.attr_7 = self.calc_formula("ST|IF")
-        self.attr_8 = self.calc_formula("EF|TN")
+        self.attr_8 = self.calc_formula("EF|NT")
         self.attr_9 = self.calc_formula("STJ|EFJ|NTP|IFP")
         self.attr_10 = self.calc_formula("STP|NTJ|EFP|IFJ")
         self.attr_11 = self.calc_formula("ETJ|SFJ|ITP|NFP")
@@ -121,18 +161,18 @@ class Type:
         self.superego = self.convert(0b0110)
 
         self.pedagogue = self.convert(0b1011)
-        #
-        #
-        #
+        self.trust = self.convert(0b0011)
+        self.intrigue = self.convert(0b1100)
+        self.kindred = self.convert(0b0100)
 
-        #
-        #
-        #
-        #
+        self.partnership = self.convert(0b1101)
+        self.compliance = self.convert(0b0101)
+        self.prudent = self.convert(0b1010)
+        self.kinship = self.convert(0b0010)
 
-        #
-        #
         self.subconscious = self.convert(0b1111)
+        self.conflict = self.convert(0b0111)
+        self.sister = self.convert(0b1000)
         self.ego = self
 
     def calc_formula(self, formula):
@@ -146,6 +186,10 @@ class Type:
     def get_attributes(self) -> list:
         return [k for k, v in self.__dict__.items()
                 if v is True and not k.startswith("_")]
+
+    def get_relationships(self) -> dict:
+        return {k: v for k, v in self.__dict__.items()
+                if isinstance(v, Type) and not k.startswith("_")}
 
     def convert(self, conversion: int) -> "Type":
         """Converts the type to another type based on the conversion number.
@@ -212,7 +256,7 @@ def _check_duplicates():
         groups = {}
         for k, v in duplicates.items():
             groups.setdefault(format(v, '016b'), []).append(k)
-        print(groups)
+        pprint(groups)
         raise Exception("Duplicates found in attributes.")
 
 

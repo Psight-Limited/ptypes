@@ -6,6 +6,7 @@ VAR_REGEX = re.compile(r'[A-Z][a-z0-9_]*')
 
 
 def format(formula):
+    formula = formula.replace(")(", ") and (")
     positions = [(m.start(), m.end())
                  for m in VAR_REGEX.finditer(formula)]
     zipped_positions = zip(positions[:-1], positions[1:])
