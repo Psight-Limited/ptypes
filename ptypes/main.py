@@ -131,6 +131,15 @@ class Type:
             "Body" if self.Body else \
             "Mind"
 
+        self.Intimacy = self.calc_formula("SoulTemplar")
+        self.Justification = self.calc_formula("SoulPhilosopher")
+        self.Satisfaction = self.calc_formula("HeartCrusader")
+        self.Reverence = self.calc_formula("HeartWayfarer")
+        self.Validation = self.calc_formula("MindTemplar")
+        self.Authority = self.calc_formula("MindPhilosopher")
+        self.Discovery = self.calc_formula("BodyCrusader")
+        self.Purpose = self.calc_formula("BodyWayfarer")
+
         self.attr_1 = self.calc_formula("ET|SF")
         self.attr_2 = self.calc_formula("IT|NF")
         self.attr_3 = self.calc_formula("ET|NF")
