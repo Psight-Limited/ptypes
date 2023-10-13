@@ -8,10 +8,10 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
 # Read requirements.txt
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
     requirements = f.read().splitlines()
 
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 DESCRIPTION = "Personality Types"
 LONG_DESCRIPTION = "Standard python package for personality types"
 

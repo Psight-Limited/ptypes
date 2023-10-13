@@ -1,16 +1,51 @@
 import re
 import ptypes.formulas as formulas
 from pprint import pprint
+from copy import deepcopy
 
 
 class InvalidTypeException(Exception):
     pass
 
 
-_types = [
-    "ESTJ", "ESTP", "ENTJ", "ENFJ", "ESFJ", "ESFP", "ENTP", "ENFP",
-    "ISTJ", "ISTP", "INTJ", "INFJ", "ISFJ", "ISFP", "INTP", "INFP",
-]
+class InvalidOctagramException(Exception):
+    pass
+
+
+Types: dict[str, "Type"] = {}
+Octagrams: dict[str, "Octagram"] = {}
+
+
+class Octagram:
+    def __new__(cls, octagram, _initializing=False):
+        if isinstance(octagram, str):
+            octagram = octagram.upper()
+        elif isinstance(octagram, Octagram):
+            return octagram
+        if octagram not in Octagrams:
+            if not _initializing:
+                raise InvalidOctagramException(f"octagram {octagram} is not valid.")
+            if Octagrams.get(octagram) is None:
+                Octagrams[octagram] = super().__new__(cls)
+        return Octagrams[octagram]
+
+    def __init__(self, octagram: str, *args, **kwargs):
+        octagram = octagram.upper()
+        if octagram in ["SDSF", "SDUF", "UDSF", "UDUF"]:
+            self.octagram = octagram
+        else:
+            raise InvalidTypeException(f"Bad octagram {octagram}")
+        self.development = octagram[:2]
+        self.focus = octagram[2:]
+
+    def get_attributes(self):
+        return {self.development, self.focus}
+
+    def __str__(self):
+        return self.octagram
+
+    def __repr__(self):
+        return f"ptypes.Octagram('{self.octagram}')"
 
 
 class Type:
@@ -22,22 +57,32 @@ class Type:
     Type("ESTP").E
     >>> True
     ```"""
-    types = {}
 
-    def __new__(cls, type):
-        if isinstance(type, str):
-            type = type.upper()
-        if type not in _types:
-            raise InvalidTypeException(f"Type {type} is not valid.")
-        if type not in cls.types:
-            cls.types[type] = super().__new__(cls)
-        return cls.types.get(type)
+    def __new__(cls, ptype, _initializing=False, _clone=False):
+        if isinstance(ptype, str):
+            ptype = ptype.upper()
+        elif isinstance(ptype, Type):
+            return ptype
+        if _clone:
+            return super().__new__(cls)
+        if ptype not in Types:
+            if not _initializing:
+                raise InvalidTypeException(f"ptype {type} is not valid.")
+            if Types.get(ptype) is None:
+                Types[ptype] = super().__new__(cls)
+        return Types[ptype]
 
-    def __init__(self, type):
+    def clone(self):
+        res = Type(self.type, _clone=True)
+        res.octagram = self.octagram
+        return res
+
+    def __init__(self, type: str, *args, **kwargs):
         if hasattr(self, "type"):
             return
 
-        self._type = type
+        self.type = type
+        self.octagram = None
         self.E = "E" == type[0]
         self.S = "S" == type[1]
         self.T = "T" == type[2]
@@ -59,21 +104,29 @@ class Type:
         self.Templar = self.calc_formula("SeTi")
         self.Wayfarer = self.calc_formula("SeTe")
         self.Philosopher = self.calc_formula("SiTe")
-        self.Quadra = \
-            "Crusader" if self.Crusader else \
-            "Templar" if self.Templar else \
-            "Wayfarer" if self.Wayfarer else \
-            "Philosopher"
+        self.Quadra = (
+            "Crusader"
+            if self.Crusader
+            else "Templar"
+            if self.Templar
+            else "Wayfarer"
+            if self.Wayfarer
+            else "Philosopher"
+        )
 
         self.Structure = self.calc_formula("E&(ST|NJ)")
         self.Starter = self.calc_formula("E&(SF|NP)")
         self.Finisher = self.calc_formula("I&(ST|NJ)")
         self.Background = self.calc_formula("I&(SF|NP)")
-        self.Interaction_style = \
-            "Structure" if self.Structure else \
-            "Starter" if self.Starter else \
-            "Finisher" if self.Finisher else \
-            "Background"
+        self.Interaction_style = (
+            "Structure"
+            if self.Structure
+            else "Starter"
+            if self.Starter
+            else "Finisher"
+            if self.Finisher
+            else "Background"
+        )
         self.Initiating = self.calc_formula("E")
         self.Responding = self.calc_formula("I")
         self.Direct = self.calc_formula("ST|NJ")
@@ -85,11 +138,15 @@ class Type:
         self.Artisan = self.calc_formula("SP")
         self.Intellectual = self.calc_formula("NT")
         self.Idealist = self.calc_formula("NF")
-        self.Temperament = \
-            "Guardian" if self.Guardian else \
-            "Artisan" if self.Artisan else \
-            "Intellectual" if self.Intellectual else \
-            "Idealist"
+        self.Temperament = (
+            "Guardian"
+            if self.Guardian
+            else "Artisan"
+            if self.Artisan
+            else "Intellectual"
+            if self.Intellectual
+            else "Idealist"
+        )
         self.Concrete = self.calc_formula("S")
         self.Abstract = self.calc_formula("N")
         self.Systematic = self.calc_formula("SJ|NT")
@@ -126,10 +183,15 @@ class Type:
         self.Heart = self.calc_formula("Abstract_templePragmatic_temple")
         self.Body = self.calc_formula("Concrete_templePragmatic_temple")
         self.Mind = self.calc_formula("Concrete_templeAffiliative_temple")
-        self.Temple = "Soul" if self.Soul else \
-            "Heart" if self.Heart else \
-            "Body" if self.Body else \
-            "Mind"
+        self.Temple = (
+            "Soul"
+            if self.Soul
+            else "Heart"
+            if self.Heart
+            else "Body"
+            if self.Body
+            else "Mind"
+        )
 
         self.Intimacy = self.calc_formula("SoulTemplar")
         self.Justification = self.calc_formula("SoulPhilosopher")
@@ -189,16 +251,23 @@ class Type:
         for var in formulas.VAR_REGEX.findall(formula):
             if getattr(self, var) is None:
                 raise InvalidTypeException(f"Attribute {var} is not valid.")
-            formula = re.sub(rf'\b{var}\b', str(getattr(self, var)), formula)
+            formula = re.sub(rf"\b{var}\b", str(getattr(self, var)), formula)
         return eval(formula)
 
-    def get_attributes(self) -> list:
-        return [k for k, v in self.__dict__.items()
-                if v is True and not k.startswith("_")]
+    def get_attributes(self) -> set:
+        res = {
+            k for k, v in self.__dict__.items() if v is True and not k.startswith("_")
+        }
+        if self.octagram:
+            res = res | self.octagram.get_attributes()
+        return res
 
     def get_relationships(self) -> dict:
-        return {k: v for k, v in self.__dict__.items()
-                if isinstance(v, Type) and not k.startswith("_")}
+        return {
+            k: v
+            for k, v in self.__dict__.items()
+            if isinstance(v, Type) and not k.startswith("_")
+        }
 
     def convert(self, conversion: int) -> "Type":
         """Converts the type to another type based on the conversion number.
@@ -212,8 +281,7 @@ class Type:
         ```"""
         if isinstance(conversion, str):
             conversion = int(conversion, 2)
-        if not isinstance(conversion, int) \
-                or conversion < 0 or conversion > 15:
+        if not isinstance(conversion, int) or conversion < 0 or conversion > 15:
             raise ValueError("Invalid input. Must be an integer between 0-15.")
         conversion_bin = bin(conversion)[2:].zfill(4)
         E = self.E ^ bool(int(conversion_bin[-4]))
@@ -221,17 +289,30 @@ class Type:
         T = self.T ^ bool(int(conversion_bin[-2]))
         J = self.J ^ bool(int(conversion_bin[-1]))
         return Type(
-            ("E" if E else "I") +
-            ("S" if S else "N") +
-            ("T" if T else "F") +
-            ("J" if J else "P")
+            ("E" if E else "I")
+            + ("S" if S else "N")
+            + ("T" if T else "F")
+            + ("J" if J else "P")
         )
 
+    def set_octagram(self, octagram: Octagram) -> "Type":
+        if not isinstance(octagram, Octagram):
+            octagram = Octagram(octagram)
+        self = self.clone()
+        self.octagram = octagram
+        return self
+
     def __str__(self):
-        return self._type
+        if self.octagram:
+            return f"{self.type} {self.octagram}"
+        return self.type
 
     def __repr__(self):
-        return f"Type('{self._type}')"
+        base = f"ptypes.Type('{self.type}')"
+        if self.octagram:
+            base += f".set_octagram({self.octagram.__repr__()})"
+
+        return base
 
 
 def _check_duplicates():
@@ -244,13 +325,17 @@ def _check_duplicates():
         # Ensure that we only skip 1 of the N duplicates
         # So that we can still detect duplicates
         # If they appear in the future
-        "Abstract", "Concrete",
-        "Initiating", "Responding",
-        "Ni", "Ne",
-        "Ti", "Te",
+        "Abstract",
+        "Concrete",
+        "Initiating",
+        "Responding",
+        "Ni",
+        "Ne",
+        "Ti",
+        "Te",
     ]
     _attributes = {}
-    for type_value, type in enumerate(_types):
+    for type_value, type in enumerate(Types):
         type_value = 2**type_value
         for attr in Type(type).get_attributes():
             if attr in skip_attributes:
@@ -259,37 +344,44 @@ def _check_duplicates():
                 _attributes[attr] = type_value
             else:
                 _attributes[attr] += type_value
-    duplicates = {k: v for k, v in _attributes.items()
-                  if len([x for x in _attributes.values() if x == v]) > 1}
+    duplicates = {
+        k: v
+        for k, v in _attributes.items()
+        if len([x for x in _attributes.values() if x == v]) > 1
+    }
     if len(duplicates):
         groups = {}
         for k, v in duplicates.items():
-            groups.setdefault(format(v, '016b'), []).append(k)
+            groups.setdefault(format(v, "016b"), []).append(k)
         pprint(groups)
         raise Exception("Duplicates found in attributes.")
 
 
-for type in _types:
+ESTJ = Type("ESTJ", _initializing=True)
+ESTP = Type("ESTP", _initializing=True)
+ENTJ = Type("ENTJ", _initializing=True)
+ENFJ = Type("ENFJ", _initializing=True)
+ESFJ = Type("ESFJ", _initializing=True)
+ESFP = Type("ESFP", _initializing=True)
+ENTP = Type("ENTP", _initializing=True)
+ENFP = Type("ENFP", _initializing=True)
+ISTJ = Type("ISTJ", _initializing=True)
+ISTP = Type("ISTP", _initializing=True)
+INTJ = Type("INTJ", _initializing=True)
+INFJ = Type("INFJ", _initializing=True)
+ISFJ = Type("ISFJ", _initializing=True)
+ISFP = Type("ISFP", _initializing=True)
+INTP = Type("INTP", _initializing=True)
+INFP = Type("INFP", _initializing=True)
+
+SDSF = Octagram("SDSF", _initializing=True)
+SDUF = Octagram("SDUF", _initializing=True)
+UDSF = Octagram("UDSF", _initializing=True)
+UDUF = Octagram("UDUF", _initializing=True)
+
+for type in Types:
     Type(type)
-for type in _types:
+for type in Types:
     Type(type).update_relationships()
-
-ESTJ = Type("ESTJ")
-ESTP = Type("ESTP")
-ENTJ = Type("ENTJ")
-ENFJ = Type("ENFJ")
-ESFJ = Type("ESFJ")
-ESFP = Type("ESFP")
-ENTP = Type("ENTP")
-ENFP = Type("ENFP")
-ISTJ = Type("ISTJ")
-ISTP = Type("ISTP")
-INTJ = Type("INTJ")
-INFJ = Type("INFJ")
-ISFJ = Type("ISFJ")
-ISFP = Type("ISFP")
-INTP = Type("INTP")
-INFP = Type("INFP")
-
 
 _check_duplicates()
