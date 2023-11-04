@@ -1,7 +1,6 @@
 import re
 import ptypes.formulas as formulas
 from pprint import pprint
-from copy import deepcopy
 
 
 class InvalidTypeException(Exception):
@@ -24,7 +23,8 @@ class Octagram:
             return octagram
         if octagram not in Octagrams:
             if not _initializing:
-                raise InvalidOctagramException(f"octagram {octagram} is not valid.")
+                raise InvalidOctagramException(
+                    f"octagram {octagram} is not valid.")
             if Octagrams.get(octagram) is None:
                 Octagrams[octagram] = super().__new__(cls)
         return Octagrams[octagram]
@@ -99,6 +99,43 @@ class Type:
         self.Fe = self.calc_formula("Ti")
         self.Te = self.calc_formula("!Ti")
         self.Fi = self.calc_formula("Te")
+
+        self.Hero = (
+            "Te" if self.calc_formula('ETJ')
+            else "Se" if self.calc_formula('ESP')
+            else "Fe" if self.calc_formula('EFJ')
+            else "Ne" if self.calc_formula('ENP')
+            else "Si" if self.calc_formula('ISJ')
+            else "Ti" if self.calc_formula('ITP')
+            else "Ni" if self.calc_formula('INJ')
+            else "Fi"
+        )
+        self.Parent = (
+            "Si" if self.calc_formula('ESJ')
+            else "Ti" if self.calc_formula('ETP')
+            else "Ni" if self.calc_formula('ENJ')
+            else "Fi" if self.calc_formula('EFP')
+            else "Te" if self.calc_formula('ITJ')
+            else "Se" if self.calc_formula('ISP')
+            else "Fe" if self.calc_formula('IFJ')
+            else "Ne"
+        )
+        self.Child = function_flip_axis(self.Parent)
+        self.Inferior = function_flip_axis(self.Hero)
+        self.Nemesis = function_flip_orbit(self.Hero)
+        self.Critic = function_flip_orbit(self.Parent)
+        self.Trickster = function_flip_reflection(self.Parent)
+        self.Demon = function_flip_reflection(self.Hero)
+        self.FunctionStack = [
+            self.Hero,
+            self.Parent,
+            self.Child,
+            self.Inferior,
+            self.Nemesis,
+            self.Critic,
+            self.Trickster,
+            self.Demon,
+        ]
 
         self.Crusader = self.calc_formula("SiTi")
         self.Templar = self.calc_formula("SeTi")
@@ -313,6 +350,42 @@ class Type:
             base += f".set_octagram({self.octagram.__repr__()})"
 
         return base
+
+
+def function_flip_axis(fun: str):
+    letter1, letter2 = fun
+    res = (
+        "N" if letter1 == "S"
+        else "S" if letter1 == "N"
+        else "T" if letter1 == "F"
+        else "F"
+    )
+    res += (
+        "i" if letter2 == "e"
+        else 'e'
+    )
+    return res
+
+
+def function_flip_orbit(fun: str):
+    res, letter2 = fun
+    res += (
+        "i" if letter2 == "e"
+        else 'e'
+    )
+    return res
+
+
+def function_flip_reflection(fun: str):
+    letter1, letter2 = fun
+    res = (
+        "N" if letter1 == "S"
+        else "S" if letter1 == "N"
+        else "T" if letter1 == "F"
+        else "F"
+    )
+    res += letter2
+    return res
 
 
 def _check_duplicates():
