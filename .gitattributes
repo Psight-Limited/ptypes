@@ -1,0 +1,8 @@
+.env filter=git-crypt diff=git-crypt
+.env.* filter=git-crypt diff=git-crypt
+
+.gitattributes !filter !diff
+.gitignore !filter !diff
+**/.gitattributes !filter !diff
+**/.gitignore !filter !diff
+README.md !filter !diff
